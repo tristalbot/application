@@ -95,42 +95,35 @@ dvf = gpd.read_parquet(DATA_LOCATION / "dvf.parquet")
 # QUALITY DIAGNOSTICS ---------------------------------------
 
 # DuckDB cannot read the geometry column as Pandas formatted it
+
 dvf_attributs = dvf.drop(columns="geometry")
 
-bad = con.sql("""
-    SELECT COUNT(*) AS n_bad
-    FROM dvf_attributs
-    WHERE length(code_commune) <> 5
-    OR NOT starts_with(code_commune, code_departement)
-""").fetchall()[0][0]
+def check_code_commune_formatting(con):
 
-if bad == 0:
-    print("Test OK: code_commune always has 5 characters starting with the department")
-else:
-    print(f"Issue in code_commune: {bad} malformed codes")
+    bad = con.sql("""
+        SELECT COUNT(*) AS n_bad
+        FROM dvf_attributs
+        WHERE length(code_commune) <> 5
+        OR NOT starts_with(code_commune, code_departement)
+    """).fetchall()[0][0]
 
-# TODO: generalize to all variables
-n_missing = con.sql("""
-    SELECT COUNT(*) AS n_missing
-    FROM dvf_attributs
-    WHERE valeur_fonciere IS NULL
-""").fetchall()[0][0]
+    if bad == 0:
+        print("Test OK: code_commune always has 5 characters starting with the department")
+    else:
+        print(f"Issue in code_commune: {bad} malformed codes")
 
-message_ok = "No missing values for variable valeur_fonciere"
-message_warn = f"{n_missing} missing values for variable valeur_fonciere"
-message = message_ok if n_missing == 0 else message_warn
-print(message)
+def check_missing_values(con, name_col):
 
-n_missing = con.sql("""
-    SELECT COUNT(*) AS n_missing
-    FROM dvf_attributs
-    WHERE surface_reelle_bati IS NULL
-""").fetchall()[0][0]
+    n_missing = con.sql("""
+        SELECT COUNT(*) AS n_missing
+        FROM dvf_attributs
+        WHERE """ + name_col + """ IS NULL
+    """).fetchall()[0][0]
 
-message_ok = "No missing values for variable surface_reelle_bati"
-message_warn = f"{n_missing} missing values for variable surface_reelle_bati"
-message = message_ok if n_missing == 0 else message_warn
-print(message)
+    message_ok = "No missing values for variable" + name_col
+    message_warn = f"{n_missing} missing values for variable" + name_col
+    message = message_ok if n_missing == 0 else message_warn
+    print(message)
 
 
 # SCOPE RESTRICTION ---------------------------------------
