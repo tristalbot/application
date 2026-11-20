@@ -4,8 +4,9 @@ import pandas as pd
 import geopandas as gpd
 import os
 import duckdb
+import seaborn as sns
 
-os.chdir('/home/coder/work/ensae-reproductibilite-application')
+os.chdir('.')
 
 
 print("Lecture des données ------------------------")
