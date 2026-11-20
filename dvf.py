@@ -13,6 +13,7 @@ import pandas as pd
 import requests
 import seaborn as sns
 from lightgbm import LGBMRegressor
+from n_trees import n_trees
 from sklearn.base import clone
 from sklearn.compose import ColumnTransformer, TransformedTargetRegressor
 from sklearn.impute import SimpleImputer
@@ -22,7 +23,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import FunctionTransformer, OrdinalEncoder
 from skore import EstimatorReport
 
-N_TREES = 1500
+N_TREES = n_trees
 LEARNING_RATE = 0.03
 NUM_LEAVES = 31
 NUMERIC_FEATURES = [

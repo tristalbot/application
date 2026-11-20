@@ -6,4 +6,5 @@ parser.add_argument(
     help="Number of trees to train our model."
 )
 args = parser.parse_args()
+n_trees = args.n_trees
 print(args.n_trees)
