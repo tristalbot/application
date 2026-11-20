@@ -3,6 +3,7 @@ Predict the price per m² of homes sold in Paris and its inner suburbs
 from DVF transactions enriched with Filosofi socio-economic data
 """
 
+import os
 from pathlib import Path
 
 import duckdb
@@ -12,6 +13,7 @@ import numpy as np
 import pandas as pd
 import requests
 import seaborn as sns
+from dotenv import load_dotenv
 from lightgbm import LGBMRegressor
 from n_trees import n_trees
 from sklearn.base import clone
@@ -22,6 +24,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import FunctionTransformer, OrdinalEncoder
 from skore import EstimatorReport
+
+load_dotenv()
 
 N_TREES = n_trees
 LEARNING_RATE = 0.03
@@ -46,7 +50,7 @@ NUMERIC_FEATURES = [
 CATEGORICAL_FEATURES = ["code_commune", "type_local"]
 DEPARTEMENTS_PARIS = ["75", "92", "93", "94"]
 
-JETON_API = "1SuperJetonUltraConfidentiel!!!"
+jeton_api = os.environ["JETON_API"]
 
 DATA_LOCATION = Path("data")
 SOURCES = {
@@ -197,7 +201,7 @@ params = {
     "maxResult": 40000,
 }
 
-headers = {"Authorization": f"Bearer {JETON_API}"}
+headers = {"Authorization": f"Bearer {jeton_api}"}
 
 response = requests.get(url, params=params, headers=headers, timeout=60)
 response.raise_for_status()
@@ -227,7 +231,7 @@ params = {
     "maxResult": 40000,
 }
 
-headers = {"Authorization": f"Bearer {JETON_API}"}
+headers = {"Authorization": f"Bearer {jeton_api}"}
 
 response = requests.get(url, params=params, headers=headers, timeout=60)
 response.raise_for_status()

@@ -8,6 +8,10 @@ Exercice fil rouge guidé sur https://ensae-reproductibilite.github.io/website/c
 
 ## Sources utilisées
 
-Données DVF récupérées et simplifiées de https://www.data.gouv.fr/datasets/demandes-de-valeurs-foncieres 
+Données DVF récupérées et simplifiées de https://www.data.gouv.fr/datasets/demandes-de-valeurs-foncieres
 * Données carroyées Filosofi: https://www.data.gouv.fr/datasets/revenus-pauvrete-et-niveau-de-vie-donnees-carroyees-2019-et-2021-dispositif-fichier-localise-social-et-fiscal-filosofi
 * Données agrégées Filosofi récupérées depuis l'API Melodi de l'Insee
+
+### Pré-requis API
+
+Créer un fichier .env
