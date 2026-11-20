@@ -6,6 +6,7 @@ from DVF transactions enriched with Filosofi socio-economic data
 from pathlib import Path
 
 import duckdb
+<<<<<<< HEAD
 import geopandas as gpd
 import matplotlib.pyplot as plt
 import numpy as np
@@ -44,6 +45,11 @@ NUMERIC_FEATURES = [
 ]
 CATEGORICAL_FEATURES = ["code_commune", "type_local"]
 DEPARTEMENTS_PARIS = ["75", "92", "93", "94"]
+=======
+import seaborn as sns
+
+os.chdir('.')
+>>>>>>> 3daa4641959a6acffcf47004ff84743dafeec958
 
 JETON_API = "1SuperJetonUltraConfidentiel!!!"
 
