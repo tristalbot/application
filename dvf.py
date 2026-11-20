@@ -6,9 +6,44 @@ from DVF transactions enriched with Filosofi socio-economic data
 from pathlib import Path
 
 import duckdb
+import geopandas as gpd
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import requests
 import seaborn as sns
+from lightgbm import LGBMRegressor
+from sklearn.base import clone
+from sklearn.compose import ColumnTransformer, TransformedTargetRegressor
+from sklearn.impute import SimpleImputer
+from sklearn.metrics import root_mean_squared_error
+from sklearn.model_selection import train_test_split
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import FunctionTransformer, OrdinalEncoder
+from skore import EstimatorReport
 
-os.chdir('.')
+N_TREES = 1500
+LEARNING_RATE = 0.03
+NUM_LEAVES = 31
+NUMERIC_FEATURES = [
+    "log_surface",
+    "log_distance_eiffel",
+    "nombre_pieces_principales",
+    "nombre_lots",
+    "log_surface_terrain",
+    "ratio_carrez",
+    "nbre_menages",
+    "tx_pauvrete",
+    "nv_vie_moyen",
+    "part_proprietaires",
+    "part_logements_sociaux",
+    "part_logements_avant_1945",
+    "surface_moyenne_logements",
+    "NIVVIE_MEDIAN",
+    "TAUX_PAUVRETE",
+]
+CATEGORICAL_FEATURES = ["code_commune", "type_local"]
+DEPARTEMENTS_PARIS = ["75", "92", "93", "94"]
 
 JETON_API = "1SuperJetonUltraConfidentiel!!!"
 
