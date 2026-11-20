@@ -7,4 +7,4 @@ parser.add_argument(
 )
 args = parser.parse_args()
 n_trees = args.n_trees
-print(args.n_trees)
+print(n_trees)
