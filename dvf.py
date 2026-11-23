@@ -3,7 +3,10 @@ Predict the price per m² of homes sold in Paris and its inner suburbs
 from DVF transactions enriched with Filosofi socio-economic data
 """
 
+<<<<<<< HEAD
 import argparse
+=======
+>>>>>>> c02308d3a6f53ee0533ad648976e95788718bbf6
 import os
 from pathlib import Path
 
@@ -16,6 +19,10 @@ import requests
 import seaborn as sns
 from dotenv import load_dotenv
 from lightgbm import LGBMRegressor
+<<<<<<< HEAD
+=======
+from n_trees import n_trees
+>>>>>>> c02308d3a6f53ee0533ad648976e95788718bbf6
 from sklearn.base import clone
 from sklearn.compose import ColumnTransformer, TransformedTargetRegressor
 from sklearn.impute import SimpleImputer
@@ -26,8 +33,13 @@ from sklearn.preprocessing import FunctionTransformer, OrdinalEncoder
 from skore import EstimatorReport
 
 load_dotenv()
+<<<<<<< HEAD
 con = duckdb.connect(database=":memory:")
 
+=======
+
+N_TREES = n_trees
+>>>>>>> c02308d3a6f53ee0533ad648976e95788718bbf6
 LEARNING_RATE = 0.03
 NUM_LEAVES = 31
 NUMERIC_FEATURES = [
@@ -63,6 +75,7 @@ SOURCES = {
     ),
 }
 
+<<<<<<< HEAD
 
 # ENVIRONMENT CONFIGURATION ---------------------------------------
 
@@ -76,6 +89,12 @@ print(f"Valeur de l'argument n_trees: {n_trees}")
 
 
 def download_sources(url_fichier: str, cible: Path) -> None:
+=======
+con = duckdb.connect(database=":memory:")
+
+
+def download_sources(url_fichier, cible):
+>>>>>>> c02308d3a6f53ee0533ad648976e95788718bbf6
     """Download url_fichier and write it to cible"""
     r = requests.get(url_fichier, timeout=120)
     r.raise_for_status()
@@ -83,6 +102,7 @@ def download_sources(url_fichier: str, cible: Path) -> None:
         f.write(r.content)
 
 
+<<<<<<< HEAD
 def get_melodi_indicator(
     code: str,
     value_name: str,
@@ -120,8 +140,15 @@ def get_melodi_indicator(
         }
         for obs in observations
     )
+=======
+# DATA IMPORT ---------------------------------------
 
+print("Lecture des données ------------------------")
+>>>>>>> c02308d3a6f53ee0533ad648976e95788718bbf6
 
+DATA_LOCATION.mkdir(exist_ok=True)
+
+<<<<<<< HEAD
 def check_code_commune_formatting(
     connection: duckdb.DuckDBPyConnection,
     df: pd.DataFrame,
@@ -160,8 +187,25 @@ def check_missing_values(
     message_warn = f"{n_missing} missing values for variable {variable}"
     message = message_ok if n_missing == 0 else message_warn
     print(message)
+=======
+for nom_fichier, url_source in SOURCES.items():
+    chemin = DATA_LOCATION / nom_fichier
+    if chemin.exists():
+        print(f"{nom_fichier:42s} déjà présent ({chemin.stat().st_size / 1e6:.0f} Mo)")
+    else:
+        print(f"Téléchargement de {nom_fichier} ...")
+        download_sources(url_source, chemin)
+        print(f"  -> {chemin.stat().st_size / 1e6:.0f} Mo")
+
+dvf = gpd.read_parquet(DATA_LOCATION / "dvf.parquet")
 
 
+# QUALITY DIAGNOSTICS ---------------------------------------
+>>>>>>> c02308d3a6f53ee0533ad648976e95788718bbf6
+
+# DuckDB cannot read the geometry column as Pandas formatted it
+
+<<<<<<< HEAD
 def check_unseen_categories(
     train_dataset: pd.DataFrame,
     test_dataset: pd.DataFrame,
@@ -215,6 +259,36 @@ check_code_commune_formatting(connection=con, df=dvf_attributs)
 
 for var in column_names:
     check_missing_values(connection=con, df=dvf_attributs, variable=var)
+=======
+dvf_attributs = dvf.drop(columns="geometry")
+
+def check_code_commune_formatting(con):
+
+    bad = con.sql("""
+        SELECT COUNT(*) AS n_bad
+        FROM dvf_attributs
+        WHERE length(code_commune) <> 5
+        OR NOT starts_with(code_commune, code_departement)
+    """).fetchall()[0][0]
+
+    if bad == 0:
+        print("Test OK: code_commune always has 5 characters starting with the department")
+    else:
+        print(f"Issue in code_commune: {bad} malformed codes")
+
+def check_missing_values(con, name_col):
+
+    n_missing = con.sql("""
+        SELECT COUNT(*) AS n_missing
+        FROM dvf_attributs
+        WHERE """ + name_col + """ IS NULL
+    """).fetchall()[0][0]
+
+    message_ok = "No missing values for variable" + name_col
+    message_warn = f"{n_missing} missing values for variable" + name_col
+    message = message_ok if n_missing == 0 else message_warn
+    print(message)
+>>>>>>> c02308d3a6f53ee0533ad648976e95788718bbf6
 
 
 # SCOPE RESTRICTION ---------------------------------------
@@ -266,6 +340,7 @@ dvf = dvf.sjoin(filo, how="left", predicate="within")
 
 
 # Filosofi municipality-level data (Melodi API)
+<<<<<<< HEAD
 
 niveau_vie = get_melodi_indicator(
     code="MED_SL", value_name="NIVVIE_MEDIAN", jeton_api=jeton_api
@@ -276,6 +351,69 @@ taux_pauvrete = get_melodi_indicator(
 
 dvf = dvf.merge(niveau_vie, left_on="code_commune", right_on="CODGEO", how="left").drop(
     columns="CODGEO"
+=======
+# DVF codes Paris by arrondissement (75101 to 75120), not as one municipality
+# (75056): without the ARM level, Paris sales would get no municipality data.
+
+dataset = "DS_FILOSOFI_CC"
+dimension = "FILOSOFI_MEASURE"
+code = "MED_SL"
+value_name = "NIVVIE_MEDIAN"
+time_period = 2023
+geo_level = ["COM", "ARM"]
+
+url = f"https://api.insee.fr/melodi/data/{dataset}"
+
+params = {
+    "GEO": geo_level,
+    dimension: code,
+    "TIME_PERIOD": time_period,
+    "maxResult": 40000,
+}
+
+headers = {"Authorization": f"Bearer {jeton_api}"}
+
+response = requests.get(url, params=params, headers=headers, timeout=60)
+response.raise_for_status()
+observations = response.json()["observations"]
+
+niveau_vie = pd.DataFrame(
+    {
+        "CODGEO": obs["dimensions"]["GEO"].split("-")[-1],
+        value_name: obs["measures"]["OBS_VALUE_NIVEAU"].get("value"),
+    }
+    for obs in observations
+)
+
+dataset = "DS_FILOSOFI_CC"
+dimension = "FILOSOFI_MEASURE"
+code = "PR_MD60"
+value_name = "TAUX_PAUVRETE"
+time_period = 2023
+geo_level = ["COM", "ARM"]
+
+url = f"https://api.insee.fr/melodi/data/{dataset}"
+
+params = {
+    "GEO": geo_level,
+    dimension: code,
+    "TIME_PERIOD": time_period,
+    "maxResult": 40000,
+}
+
+headers = {"Authorization": f"Bearer {jeton_api}"}
+
+response = requests.get(url, params=params, headers=headers, timeout=60)
+response.raise_for_status()
+observations = response.json()["observations"]
+
+taux_pauvrete = pd.DataFrame(
+    {
+        "CODGEO": obs["dimensions"]["GEO"].split("-")[-1],
+        value_name: obs["measures"]["OBS_VALUE_NIVEAU"].get("value"),
+    }
+    for obs in observations
+>>>>>>> c02308d3a6f53ee0533ad648976e95788718bbf6
 )
 dvf = dvf.merge(
     taux_pauvrete, left_on="code_commune", right_on="CODGEO", how="left"
@@ -283,6 +421,18 @@ dvf = dvf.merge(
 
 print(dvf.head(5))
 
+<<<<<<< HEAD
+=======
+dvf = dvf.merge(niveau_vie, left_on="code_commune", right_on="CODGEO", how="left").drop(
+    columns="CODGEO"
+)
+dvf = dvf.merge(
+    taux_pauvrete, left_on="code_commune", right_on="CODGEO", how="left"
+).drop(columns="CODGEO")
+
+print(dvf.head(5))
+
+>>>>>>> c02308d3a6f53ee0533ad648976e95788718bbf6
 
 # DESCRIPTIVE STATISTICS ---------------------------------------
 
@@ -398,7 +548,11 @@ pipe_lgbm = Pipeline(
         (
             "regressor",
             LGBMRegressor(
+<<<<<<< HEAD
                 n_estimators=n_trees,
+=======
+                n_estimators=N_TREES,
+>>>>>>> c02308d3a6f53ee0533ad648976e95788718bbf6
                 learning_rate=LEARNING_RATE,
                 num_leaves=NUM_LEAVES,
                 min_child_samples=10,
@@ -429,11 +583,36 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.1, random_
 pd.concat([X_train, y_train], axis=1).to_csv("train.csv")
 pd.concat([X_test, y_test], axis=1).to_csv("test.csv")
 
+<<<<<<< HEAD
+=======
 
 # SPLIT VALIDATION ---------------------------------------
 
+# Test categories never seen in training are encoded as unknown (-1): the model
+# has learned nothing about them, so their predictions are unreliable.
+if set(X_test["code_commune"].dropna().unique()) - set(
+    X_train["code_commune"].dropna().unique()
+):
+    message = "Categories of code_commune missing from the training set"
+else:
+    message = "All test categories of code_commune are known to the model"
+>>>>>>> c02308d3a6f53ee0533ad648976e95788718bbf6
+
+# SPLIT VALIDATION ---------------------------------------
+
+<<<<<<< HEAD
 for string_var in CATEGORICAL_FEATURES:
     check_unseen_categories(X_train, X_test, string_var)
+=======
+if set(X_test["type_local"].dropna().unique()) - set(
+    X_train["type_local"].dropna().unique()
+):
+    message = "Categories of type_local missing from the training set"
+else:
+    message = "All test categories of type_local are known to the model"
+
+print(message)
+>>>>>>> c02308d3a6f53ee0533ad648976e95788718bbf6
 
 
 # TRAINING AND EVALUATION ---------------------------------------
