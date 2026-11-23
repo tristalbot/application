@@ -33,3 +33,7 @@ Données DVF récupérées et simplifiées de https://www.data.gouv.fr/datasets/
 ### Pré-requis API
 
 Créer un fichier .env
+
+#### Installation
+
+Dans le terminal, lancer: pip install -r requirements.txt

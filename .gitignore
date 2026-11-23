@@ -1,6 +1,3 @@
 .env
 __pycache__/
-<<<<<<< HEAD
-=======
-*.csv
->>>>>>> b9599a1a7cc4229c75be7a70c5b3fa6552e38989
+/data/raw/
