@@ -18,6 +18,18 @@ JETON_API="####" #renseigner la valeur pertinente
 
 ## Sources utilisées
 
+<<<<<<< HEAD
 * Données DVF récupérées et simplifiées de https://www.data.gouv.fr/datasets/demandes-de-valeurs-foncieres
+=======
+<<<<<<< HEAD
+* Données DVF récupérées et simplifiées de https://www.data.gouv.fr/datasets/demandes-de-valeurs-foncieres
+=======
+Données DVF récupérées et simplifiées de https://www.data.gouv.fr/datasets/demandes-de-valeurs-foncieres
+>>>>>>> c02308d3a6f53ee0533ad648976e95788718bbf6
+>>>>>>> b9599a1a7cc4229c75be7a70c5b3fa6552e38989
 * Données carroyées Filosofi: https://www.data.gouv.fr/datasets/revenus-pauvrete-et-niveau-de-vie-donnees-carroyees-2019-et-2021-dispositif-fichier-localise-social-et-fiscal-filosofi
 * Données agrégées Filosofi récupérées depuis l'API Melodi de l'Insee
+
+### Pré-requis API
+
+Créer un fichier .env
