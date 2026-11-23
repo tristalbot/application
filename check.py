@@ -1,8 +1,8 @@
 import duckdb
-import dvf
+import main
 import pandas as pd
 
-DATA_LOCATION = dvf.DATA_LOCATION
+DATA_LOCATION = main.DATA_LOCATION
 DATA_LOCATION.mkdir(exist_ok=True)
 
 def check_code_commune_formatting(

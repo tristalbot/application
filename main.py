@@ -19,7 +19,7 @@ from check import (
     check_unseen_categories,
 )
 from dotenv import load_dotenv
-from import_data import download_sources, get_melodi_indicator
+from import_data import dvf, get_melodi_indicator
 from lightgbm import LGBMRegressor
 from n_trees import n_trees
 from sklearn.base import clone
@@ -77,25 +77,6 @@ parser.add_argument("--n_trees", type=int, default=1500, help="Nombre d'arbres")
 args = parser.parse_args()
 
 print(f"Valeur de l'argument n_trees: {n_trees}")
-
-
-
-# DATA IMPORT ---------------------------------------
-
-print("Lecture des données ------------------------")
-
-DATA_LOCATION.mkdir(exist_ok=True)
-
-for nom_fichier, url_source in SOURCES.items():
-    chemin = DATA_LOCATION / nom_fichier
-    if chemin.exists():
-        print(f"{nom_fichier:42s} déjà présent ({chemin.stat().st_size / 1e6:.0f} Mo)")
-    else:
-        print(f"Téléchargement de {nom_fichier} ...")
-        download_sources(url_source, chemin)
-        print(f"  -> {chemin.stat().st_size / 1e6:.0f} Mo")
-
-dvf = gpd.read_parquet(DATA_LOCATION / "dvf.parquet")
 
 
 # QUALITY DIAGNOSTICS ---------------------------------------
