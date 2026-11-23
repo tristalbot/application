@@ -12,9 +12,14 @@ import geopandas as gpd
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import requests
 import seaborn as sns
+from check import (
+    check_code_commune_formatting,
+    check_missing_values,
+    check_unseen_categories,
+)
 from dotenv import load_dotenv
+from import_data import download_sources, get_melodi_indicator
 from lightgbm import LGBMRegressor
 from n_trees import n_trees
 from sklearn.base import clone
@@ -73,115 +78,6 @@ args = parser.parse_args()
 
 print(f"Valeur de l'argument n_trees: {n_trees}")
 
-
-def download_sources(url_fichier: str, cible: Path) -> None:
-    """Download url_fichier and write it to cible"""
-    r = requests.get(url_fichier, timeout=120)
-    r.raise_for_status()
-    with open(cible, "wb") as f:
-        f.write(r.content)
-
-
-def get_melodi_indicator(
-    code: str,
-    value_name: str,
-    jeton_api: str,
-    dataset: str = "DS_FILOSOFI_CC",
-    dimension: str = "FILOSOFI_MEASURE",
-    time_period: int = 2023,
-    geo_level: tuple[str, ...] = ("COM", "ARM"),
-) -> pd.DataFrame:
-    """Fetch a municipality-level indicator from the Insee Melodi API
-
-    DVF codes Paris by arrondissement (75101 to 75120), not as one municipality
-    (75056): without the ARM level, Paris sales would get no municipality data.
-    """
-
-    url = f"https://api.insee.fr/melodi/data/{dataset}"
-
-    params = {
-        "GEO": list(geo_level),
-        dimension: code,
-        "TIME_PERIOD": time_period,
-        "maxResult": 40000,
-    }
-
-    headers = {"Authorization": f"Bearer {jeton_api}"}
-
-    response = requests.get(url, params=params, headers=headers, timeout=60)
-    response.raise_for_status()
-    observations = response.json()["observations"]
-
-    return pd.DataFrame(
-        {
-            "CODGEO": obs["dimensions"]["GEO"].split("-")[-1],
-            value_name: obs["measures"]["OBS_VALUE_NIVEAU"].get("value"),
-        }
-        for obs in observations
-    )
-
-DATA_LOCATION.mkdir(exist_ok=True)
-
-def check_code_commune_formatting(
-    connection: duckdb.DuckDBPyConnection,
-    df: pd.DataFrame,
-):
-    """Check that code_commune has 5 characters and starts with the department"""
-
-    query = (
-        "SELECT COUNT(*) AS n_bad "
-        "FROM df "
-        "WHERE length(code_commune) <> 5 "
-        "OR NOT starts_with(code_commune, code_departement)"
-    )
-
-    bad = connection.sql(query).fetchall()[0][0]
-
-    if bad == 0:
-        print(
-            "Test OK: code_commune always has 5 characters starting with the department"
-        )
-    else:
-        print(f"Issue in code_commune: {bad} malformed codes")
-
-
-def check_missing_values(
-    connection: duckdb.DuckDBPyConnection,
-    df: pd.DataFrame,
-    variable: str = "valeur_fonciere",
-):
-    """Count the missing values of a variable"""
-
-    query = f"SELECT COUNT(*) AS n_missing FROM df WHERE {variable} IS NULL"
-
-    n_missing = connection.sql(query).fetchall()[0][0]
-
-    message_ok = f"No missing values for variable {variable}"
-    message_warn = f"{n_missing} missing values for variable {variable}"
-    message = message_ok if n_missing == 0 else message_warn
-    print(message)
-
-# DuckDB cannot read the geometry column as Pandas formatted it
-
-def check_unseen_categories(
-    train_dataset: pd.DataFrame,
-    test_dataset: pd.DataFrame,
-    variable: str,
-):
-    """Check that every test category also appears in the training set
-
-    Unseen categories are encoded as unknown (-1): the model has learned nothing
-    about them, so their predictions are unreliable.
-    """
-
-    if set(test_dataset[variable].dropna().unique()) - set(
-        train_dataset[variable].dropna().unique()
-    ):
-        message = f"Categories of {variable} missing from the training set"
-    else:
-        message = f"All test categories of {variable} are known to the model"
-
-    print(message)
 
 
 # DATA IMPORT ---------------------------------------
