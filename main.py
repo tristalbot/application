@@ -11,15 +11,12 @@ import duckdb
 import geopandas as gpd
 import pandas as pd
 import seaborn as sns
-from dotenv import load_dotenv
-from sklearn.metrics import root_mean_squared_error
-from sklearn.model_selection import train_test_split
-
 from check import (
     check_code_commune_formatting,
     check_missing_values,
     check_unseen_categories,
 )
+from dotenv import load_dotenv
 from evaluation import evaluate_with_skore, rmse_by_commune
 from features import build_features
 from import_data import (
@@ -28,6 +25,8 @@ from import_data import (
     download_missing_sources,
 )
 from model import create_pipeline
+from sklearn.metrics import root_mean_squared_error
+from sklearn.model_selection import train_test_split
 
 load_dotenv()
 con = duckdb.connect(database=":memory:")
